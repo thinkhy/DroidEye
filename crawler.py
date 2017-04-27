@@ -3,10 +3,10 @@
 # file:    crawler.py
 # brief:   crawl stackoverflow pages tagged with "Android"
 # date:    2017-04-26
-# creator: huangye
+# creator: thinkhy
 # changes:
-# 	2017-04-25  init @hy
-# 	2017-04-26  add two arguments @hy
+# 	2017-04-25  init @thinkhy
+# 	2017-04-26  add two arguments @thinkhy
 #################################################################################
 import requests
 import time
@@ -76,8 +76,8 @@ for i in range(start,end):
          out.close()
          pagenum=pagenum+1
      
-     # every 1 seconds
-     time.sleep(1)
+         # every 1 seconds
+         time.sleep(1)
 
 
 
