@@ -13,10 +13,11 @@ import time
 import sys
 import optparse
 import re
+import os
+import os.path
 from bs4 import BeautifulSoup
 
 url='https://stackoverflow.com/questions/tagged/android'
-
 parms=('&sort=newest&pagesize=15')
 page=('page=')
 
@@ -59,10 +60,15 @@ for i in range(start,end):
      docs=items.find_all('a', href=True,attrs={'class':'question-hyperlink'})
      links=[]
      sn=""
+     filename=""
      for a in docs:
          m=re.search('/questions/(\d+)/',a['href'])
-         if m:
+         if m: 
              sn=m.group(1)
+             filename="./%s.html"%(sn)		
+             if os.path.isfile(filename): # filter existed file
+                 print(filename + " is existed")
+                 continue
          else:
              continue	
 
@@ -71,14 +77,14 @@ for i in range(start,end):
          r=requests.get(url=link,headers=headers)
          html=r.content
          print("[INFO] writing to the file %s.html"%(sn))
-         out=open("%s.html"%(sn), "wb") 
+         out=open(filename, "wb") 
          out.write(html)
          out.close()
          pagenum=pagenum+1
      
          # every 1 seconds
          time.sleep(1)
-
+      
 
 
 
