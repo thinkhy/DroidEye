@@ -1,3 +1,4 @@
+#!/usr/local/bin/python3
 #!/usr/bin/python3
 ################################################################################
 # file:    crawler.py
@@ -7,6 +8,7 @@
 # changes:
 # 	2017-04-25  init @thinkhy
 # 	2017-04-26  add two arguments @thinkhy
+# 	2017-04-30  read ip list from proxy1.in and proxy2.in, select a proxy randomly 
 #################################################################################
 import requests
 import time
@@ -15,6 +17,9 @@ import optparse
 import re
 import os
 import os.path
+import random 
+import string
+from retrying import retry
 from bs4 import BeautifulSoup
 
 url='https://stackoverflow.com/questions/tagged/android'
@@ -46,6 +51,34 @@ end=options.end
 print("[INFO] starting page: ", start)
 print("[INFO] ending page: ", end)
 
+
+# read ip list
+proxy_list = []
+with open("proxy1.in") as file:
+    user='pd430'
+    passwd='pd430'
+    port=888
+    for line in file:
+        ip = line.strip()
+        proxy="http://%s:%s@%s:%d"%(user,passwd,ip, port)
+        print("proxy: ", proxy)
+        proxy_list.append(proxy)
+@retry(stop_max_attempt_number=10)
+def get_page_via_proxy(myurl):
+     secure_random = random.SystemRandom()
+     proxy = secure_random.choice(proxy_list)
+     print("choose proxy: ", proxy)
+     session = requests.session()
+     session.proxies = {'http':proxy,
+                        'https':proxy
+                       }
+     characters = string.ascii_letters  + string.digits
+     secret =  "".join(random.choice(characters) for x in range(random.randint(8, 16)))
+     headers['Referer'] = 'http://www.baidu.com/link?url=_andhfsjjjKRgEWkj7i9cFmYYGsisrnm2A-TN3XZDQXxvGsM9k9ZZSnikW2Yds4s&amp;amp;wd=&amp;amp;eqid=%s'%(secret)
+     print("header:", headers['Referer'])
+     r=session.get(url=myurl,headers=headers)
+     return r
+
 # crawl page info
 html=""
 pagenum=1
@@ -53,8 +86,7 @@ for i in range(start,end):
      i=str(i)
      print("[INFO] we are at page list #"+i+"...")
      a=(url+'?'+page+i+'&'+parms)
-     r=requests.get(url=a,headers=headers)
-
+     r=get_page_via_proxy(a)
      html=r.content
      items=BeautifulSoup(html, 'html.parser')
      docs=items.find_all('a', href=True,attrs={'class':'question-hyperlink'})
@@ -74,6 +106,7 @@ for i in range(start,end):
 
          link="http://stackoverflow.com" + a['href']
          print("[INFO] crawling list %s page %d: %s"%(i, pagenum,link))
+         r=get_page_via_proxy(link)
          r=requests.get(url=link,headers=headers)
          html=r.content
          print("[INFO] writing to the file %s.html"%(sn))
@@ -83,7 +116,7 @@ for i in range(start,end):
          pagenum=pagenum+1
      
          # every 1 seconds
-         time.sleep(1)
+         # time.sleep(1)
       
 
 
