@@ -116,7 +116,7 @@ for i in range(start,end):
          pagenum=pagenum+1
      
          # every 1 seconds
-         # time.sleep(1)
+         time.sleep(1)
       
 
 
