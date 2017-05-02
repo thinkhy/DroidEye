@@ -89,6 +89,12 @@ def get_page(myurl):
                            'https':proxy
                           }
         r=session.get(url=myurl,headers=headers)
+      
+     html=str(r.content)
+     m=re.search('/Method: rate limit/',html)
+     if m: 
+         time.sleep(10*60) # I'm banned, have a sleep
+     
      return r
 
 # crawl page info
