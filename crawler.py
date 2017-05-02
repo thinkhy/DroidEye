@@ -10,6 +10,7 @@
 # 	2017-04-26  add two arguments @thinkhy
 # 	2017-04-30  read ip list from proxy1.in and proxy2.in, select a proxy randomly 
 #################################################################################
+import traceback
 import requests
 import time
 import sys
@@ -43,50 +44,61 @@ parser.add_option('-s', '--start',
 parser.add_option('-e', '--end', 
              action="store", dest="end", type=int,default="1000",
              help='ending number for page list')		
+parser.add_option('-p', '--proxy', 
+             action="store", dest="proxy", type=str,default="",
+             help='file containing proxy list')		
 options, args = parser.parse_args()
 
 start=options.start
 end=options.end
+proxy=options.proxy
 
 print("[INFO] starting page: ", start)
 print("[INFO] ending page: ", end)
+proxy_mode=(len(proxy)>0)
 
+if(proxy_mode > 0):
+   # read ip list
+   proxy_list = []
+   with open("proxy1.in") as file:
+     user='pd430'
+     passwd='pd430'
+     port=888
+     for line in file:
+       ip = line.strip()
+       proxy="http://%s:%s@%s:%d"%(user,passwd,ip, port)
+       print("proxy: ", proxy)
+       proxy_list.append(proxy)
 
-# read ip list
-proxy_list = []
-with open("proxy1.in") as file:
-    user='pd430'
-    passwd='pd430'
-    port=888
-    for line in file:
-        ip = line.strip()
-        proxy="http://%s:%s@%s:%d"%(user,passwd,ip, port)
-        print("proxy: ", proxy)
-        proxy_list.append(proxy)
-@retry(stop_max_attempt_number=10)
-def get_page_via_proxy(myurl):
-     secure_random = random.SystemRandom()
-     proxy = secure_random.choice(proxy_list)
-     print("choose proxy: ", proxy)
-     session = requests.session()
-     session.proxies = {'http':proxy,
-                        'https':proxy
-                       }
+#@retry(stop_max_attempt_number=1)
+def get_page(myurl):
      characters = string.ascii_letters  + string.digits
      secret =  "".join(random.choice(characters) for x in range(random.randint(8, 16)))
      headers['Referer'] = 'http://www.baidu.com/link?url=_andhfsjjjKRgEWkj7i9cFmYYGsisrnm2A-TN3XZDQXxvGsM9k9ZZSnikW2Yds4s&amp;amp;wd=&amp;amp;eqid=%s'%(secret)
      print("header:", headers['Referer'])
-     r=session.get(url=myurl,headers=headers)
+
+     if (proxy_mode == False):
+        r = requests.get(url=myurl, headers=headers)
+     else:
+        secure_random = random.SystemRandom()
+        proxy = secure_random.choice(proxy_list)
+        print("choose proxy: ", proxy)
+        session = requests.session()
+        session.proxies = {'http':proxy,
+                           'https':proxy
+                          }
+        r=session.get(url=myurl,headers=headers)
      return r
 
 # crawl page info
 html=""
 pagenum=1
 for i in range(start,end):
+  try:
      i=str(i)
      print("[INFO] we are at page list #"+i+"...")
      a=(url+'?'+page+i+'&'+parms)
-     r=get_page_via_proxy(a)
+     r=get_page(a)
      html=r.content
      items=BeautifulSoup(html, 'html.parser')
      docs=items.find_all('a', href=True,attrs={'class':'question-hyperlink'})
@@ -102,12 +114,13 @@ for i in range(start,end):
                  print(filename + " is existed")
                  continue
          else:
+             print("Invalid URL %s"%(a['href']))
              continue	
 
          link="http://stackoverflow.com" + a['href']
-         print("[INFO] crawling list %s page %d: %s"%(i, pagenum,link))
-         r=get_page_via_proxy(link)
-         r=requests.get(url=link,headers=headers)
+         print("[INFO] crawling list %s page %d: %s\n"%(i, pagenum,link))
+         r=get_page(link)
+         r=requests.get(url=link, headers=headers)
          html=r.content
          print("[INFO] writing to the file %s.html"%(sn))
          out=open(filename, "wb") 
@@ -117,6 +130,12 @@ for i in range(start,end):
      
          # every 1 seconds
          time.sleep(1)
+
+  except Exception as e:
+      print(traceback.format_exc())  
+      print(url)
+      #raise
+          
       
 
 
