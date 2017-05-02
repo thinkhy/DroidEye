@@ -5,6 +5,7 @@
 # brief:   crawl stackoverflow pages tagged with "Android"
 # date:    2017-04-26
 # creator: thinkhy
+# TODO:    2017-05-02: wait when hit rate limit
 # changes:
 # 	2017-04-25  init @thinkhy
 # 	2017-04-26  add two arguments @thinkhy
@@ -98,6 +99,7 @@ for i in range(start,end):
      i=str(i)
      print("[INFO] we are at page list #"+i+"...")
      a=(url+'?'+page+i+'&'+parms)
+     time.sleep(1)
      r=get_page(a)
      html=r.content
      items=BeautifulSoup(html, 'html.parser')
@@ -130,14 +132,38 @@ for i in range(start,end):
      
          # every 1 seconds
          time.sleep(1)
+     
 
   except Exception as e:
       print(traceback.format_exc())  
       print(url)
       #raise
-          
-      
 
+'''          
+The page of BANNED!!!
+
+Too many requests
+
+This IP address (198.11.174.68) has performed an unusual high number of requests and has been temporarily rate limited. If you believe this to be in error, please contact us at team@stackexchange.com.
+
+When contacting us, please include the following information in the email:
+
+Method: rate limit
+
+XID: 3655009981-SJC
+
+IP: 198.11.174.68
+
+X-Forwarded-For:
+
+User-Agent: Mozilla/5.0 _Windows NT 6.1; WOW64_ AppleWebKit/537.36 _KHTML, like Gecko_ Chrome/45.0.2454.101 Safari/537.36
+
+Reason: Request rate.
+
+Time: Tue, 02 May 2017 07:09:39 GMT
+
+URL: stackoverflow.com/questions/3471827/how-do-i-list-all-remote-branches-in-git-1-7      
+'''
 
 
 
