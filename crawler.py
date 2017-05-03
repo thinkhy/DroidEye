@@ -91,8 +91,7 @@ def get_page(myurl):
         r=session.get(url=myurl,headers=headers)
       
      html=str(r.content)
-     m=re.search('/Method: rate limit/',html)
-     if m: 
+     if 'Method: rate limit' in html: 
          time.sleep(10*60) # I'm banned, have a sleep
      
      return r
@@ -137,7 +136,7 @@ for i in range(start,end):
          pagenum=pagenum+1
      
          # every 1 seconds
-         time.sleep(1)
+         time.sleep(2)
      
 
   except Exception as e:
