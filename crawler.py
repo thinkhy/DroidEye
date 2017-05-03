@@ -92,6 +92,7 @@ def get_page(myurl):
       
      html=str(r.content)
      if 'Method: rate limit' in html: 
+         print("waiting for a minute to work around rate limit")
          time.sleep(10*60) # I'm banned, have a sleep
      
      return r
