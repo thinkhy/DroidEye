@@ -22,10 +22,10 @@ var io = socketio.listen(app);
 io.sockets.on('connection', function (socket) {
   setInterval(function() {
     var timestamp = Date.now();
-    console.log('Emitted: ' + timestamp);
 
-    var command="ls -l|wc -l";	
+    var command="ls -l ..|wc -l";	
     exec(command, function(error, stdout, stderr) {
+       console.log('Emitted: ' + stdout);
        socket.emit('timer', stdout);
     });
 
