@@ -15,7 +15,9 @@ import optparse
 import re
 from bs4 import BeautifulSoup
 
-url='https://stackoverflow.com/questions/tagged/android'
+# @thinkhy 2017-05-17
+# There are 1,257,848 questions tagged with 'Java', maximum page number is 83857, each page contains 15 questions
+url='https://stackoverflow.com/questions/tagged/'
 
 parms=('&sort=newest&pagesize=15')
 page=('page=')
@@ -37,15 +39,20 @@ parser.add_option('-s', '--start',
 parser.add_option('-e', '--end', 
              action="store", dest="end", type=int,default="1000",
              help='ending number for page list')		
+parser.add_option('-t', '--tag', 
+             action="store", dest="tag", type=str,default="java",
+             help='tag of questions in StackOverFlow')		
 options, args = parser.parse_args()
 
 start=options.start
 end=options.end
+tag=options.tag
 
 print("[INFO] starting page: ", start)
 print("[INFO] ending page: ", end)
 
 # crawl page info
+url=url+tag
 html=""
 pagenum=1
 for i in range(start,end):
@@ -78,9 +85,4 @@ for i in range(start,end):
      
          # every 1 seconds
          time.sleep(1)
-
-
-
-
-
 
