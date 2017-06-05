@@ -19,7 +19,7 @@ def getUser(lastId):
             print 'result  is empty '
             return
     else:
-        print ('result status_code is '%r.status_code)
+        print ('result status_code is %s'%r.status_code)
 
 '''
 根据用户名查询repos
@@ -40,7 +40,7 @@ def getResposByLogin(login):
             print 'result  is empty '
             return
     else:
-        print ('result status_code is '%r.status_code)
+        print ('result status_code is %s'%r.status_code)
 
 
 '''
@@ -59,7 +59,7 @@ def getIssues(login,name):
             print 'result  is empty '
             return
     else:
-        print ('result status_code is '%r.status_code)
+        print ('result status_code is %s'%r.status_code)
 
 
 count = 0
