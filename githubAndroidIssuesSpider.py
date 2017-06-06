@@ -6,14 +6,26 @@ github 被封信息
 }
 
 '''
+#coding=utf-8
 import requests
 import json
 import time
+import random
+import sys
 gol_lastId = '0'
 headers = {'Accept':'application/vnd.github.mercy-preview+json'}
 def getUser(lastId):
     res_dict = {}
     url='https://api.github.com/users?since=%s'%(lastId)
+    #添加代理IP
+#     secure_random = random.SystemRandom()
+#     proxy = secure_random.choice(proxy_list)
+#     print("choose proxy: ", proxy)
+#     session = requests.session()
+#     session.proxies = {'http':proxy,
+#                         'https':proxy
+#                         }
+#     r=session.get(url)
     r = requests.get(url)
     if r.status_code == 200:
         if  r.content:
@@ -34,6 +46,7 @@ def getUser(lastId):
 根据用户名查询repos
 '''
 def getResposByLogin(login):
+    print ('select user  is  %s '%login)
     login_list=[]
     r = requests.get('https://api.github.com/users/'+login+'/repos',headers=headers)
     if r.status_code == 200:
@@ -53,7 +66,7 @@ def getResposByLogin(login):
             print 'result  is empty '
             return
     else:
-        print ('result status_code is '%r.status_code)
+        print ('result status_code is %s'%r.status_code)
 
 
 '''
@@ -61,12 +74,14 @@ issues列表查询
 对应的commits为comments_url
 '''
 def getIssues(login,name):
+    print ('select user  %s respos  is %s'%(login,name))
     issues_list=[]
     r = requests.get('https://api.github.com/repos/'+login+'/'+name+'/issues')
     if r.status_code == 200:
         if  r.content:
             res_issues_list=json.loads(r.content)
             for j in range(len(res_issues_list)):
+                    print 'select >>>>>>>>>>>>>success:'
                     print  res_issues_list[j]['title'] , res_issues_list[j]['body'] , res_issues_list[j]['comments_url']
         else:
             print 'result  is empty '
@@ -93,7 +108,7 @@ def getReposContents(contents_url):
             print 'result  is empty '
             return content_list
     else:
-        print ('result status_code is '%r.status_code)
+        print ('result status_code is %s'%r.status_code)
         return content_list
 
 '''
@@ -122,12 +137,35 @@ def getCondition_Contents_Url(contents_url):
                 return True
     return False
 
+"""
+http://www.ip181.com/获取HTTPS代理
+"""
+def get_ip181_proxies():
+    proxy_list = []
+    html_page = requests.get('http://www.ip181.com/').content.decode('utf-8','ignore')
+    items = BeautifulSoup(html_page, 'html.parser')
+    docs = items.find_all('td')
+    for i in range(len(docs)):
+        if docs[i].string:
+            l=re.findall(r'\d+.\d+.\d+.\d+', docs[i].string)
+            if l:
+                proxy_list.append(l[0]+":"+docs[i+1].string)
+    return proxy_list
 
+
+"""
+获取HTTPS代理
+"""
+proxy_list = []
+def func1():
+    global  proxy_list
+    proxy_list=get_ip181_proxies()
 
 
 
 count = 0
 while (count < 9999999999):
+    print count
     res_dict = getUser(gol_lastId)
     if not res_dict:
         break
@@ -137,9 +175,20 @@ while (count < 9999999999):
             for i in login_list:
                 issues_list = getIssues(v,i)
                 print issues_list
-                time.sleep(1)
+                time.sleep(5)
 
-        time.sleep(1)
+        time.sleep(5)
 
-    time.sleep(1)
+    time.sleep(5)
     count+=1
+
+# func1()
+
+# while 1:
+#     try:
+#         res_dict = getUser('0')
+#         print len(res_dict)
+#     except Exception as exc:
+#         print(exc)
+#     finally:
+#         time.sleep(2)
