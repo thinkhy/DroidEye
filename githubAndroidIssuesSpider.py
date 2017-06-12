@@ -12,21 +12,23 @@ import json
 import time
 import random
 import sys
+import re
+
 gol_lastId = '0'
 headers = {'Accept':'application/vnd.github.mercy-preview+json'}
 def getUser(lastId):
     res_dict = {}
     url='https://api.github.com/users?since=%s'%(lastId)
     #添加代理IP
-#     secure_random = random.SystemRandom()
-#     proxy = secure_random.choice(proxy_list)
-#     print("choose proxy: ", proxy)
-#     session = requests.session()
-#     session.proxies = {'http':proxy,
-#                         'https':proxy
-#                         }
-#     r=session.get(url)
-    r = requests.get(url)
+    secure_random = random.SystemRandom()
+    proxy = secure_random.choice(proxy_list)
+    print("choose proxy: ", proxy)
+    session = requests.session()
+    session.proxies = {'http':proxy,
+                        'https':proxy
+                        }
+    r=session.get(url)
+#     r = requests.get(url)
     if r.status_code == 200:
         if  r.content:
             res_list=json.loads(r.content)
@@ -46,9 +48,18 @@ def getUser(lastId):
 根据用户名查询repos
 '''
 def getResposByLogin(login):
-    print ('select user  is  %s '%login)
     login_list=[]
-    r = requests.get('https://api.github.com/users/'+login+'/repos',headers=headers)
+    url='https://api.github.com/users/'+login+'/repos'
+    #添加代理IP
+    secure_random = random.SystemRandom()
+    proxy = secure_random.choice(proxy_list)
+    print("choose proxy: ", proxy)
+    session = requests.session()
+    session.proxies = {'http':proxy,
+                        'https':proxy
+                        }
+    r=session.get(url,headers=headers)
+#     r = requests.get(url,headers=headers)
     if r.status_code == 200:
         if  r.content:
             res_login_list=json.loads(r.content)
@@ -74,30 +85,110 @@ issues列表查询
 对应的commits为comments_url
 '''
 def getIssues(login,name):
-    print ('select user  %s respos  is %s'%(login,name))
-    issues_list=[]
-    r = requests.get('https://api.github.com/repos/'+login+'/'+name+'/issues')
+    print login,name
+    url='https://api.github.com/repos/'+login+'/'+name+'/issues'
+    #添加代理IP
+    secure_random = random.SystemRandom()
+    proxy = secure_random.choice(proxy_list)
+    print("choose proxy: ", proxy)
+    session = requests.session()
+    session.proxies = {'http':proxy,
+                        'https':proxy
+                        }
+    r=session.get(url)
+    # r = requests.get(url)
+
     if r.status_code == 200:
         if  r.content:
             res_issues_list=json.loads(r.content)
             for j in range(len(res_issues_list)):
-                    print 'select >>>>>>>>>>>>>success:'
-                    print  res_issues_list[j]['title'] , res_issues_list[j]['body'] , res_issues_list[j]['comments_url']
+#                     print  res_issues_list[j]['user']['id'],login,res_issues_list[j]['id'],res_issues_list[j]['title'] , res_issues_list[j]['body'] , res_issues_list[j]['comments_url']
+                    content_list=getReposCommentss(res_issues_list[j]['comments_url'])
+                    # print content_list
+                    res_dict = {}
+                    if not content_list:
+                        res_dict['user_id']=res_issues_list[j]['user']['id']
+                        res_dict['login_name']=login
+                        res_dict['res_name']=name
+                        res_dict['issues_id']=res_issues_list[j]['id']
+                        res_dict['issues_title']=res_issues_list[j]['title']
+                        res_dict['issues_body']=res_issues_list[j]['body']
+                        res_dict['issues_comments_url']=res_issues_list[j]['comments_url']
+                        jstxt=json.dumps(res_dict)
+                        # print jstxt
+                        txt_name=gol_lastId+'_'+login+'_'+name+'.txt'
+                        # file=open('/Users/chenxiangyu/local/'+txt_name,'a')
+                        file=open('/home/cxy/python/'+txt_name,'a')
+                        file.write(jstxt+'\n');
+                        file.close()
+                    else:
+                        print len(content_list)
+                        for k in range(len(content_list)):
+                            res_dict['user_id']=res_issues_list[j]['user']['id']
+                            res_dict['login_name']=login
+                            res_dict['res_name']=name
+                            res_dict['issues_id']=res_issues_list[j]['id']
+                            res_dict['issues_title']=res_issues_list[j]['title']
+                            res_dict['issues_body']=res_issues_list[j]['body']
+                            res_dict['issues_comments_url']=res_issues_list[j]['comments_url']
+                            res_dict['issues_comments_body']=content_list[k]
+                            jstxt=json.dumps(res_dict)
+                            # print jstxt
+                            txt_name=gol_lastId+'_'+login+'_'+name+'.txt'
+                            # file=open('/Users/chenxiangyu/local/'+txt_name,'a')
+                            file=open('/home/cxy/python/'+txt_name,'a')
+                            file.write(jstxt+'\n');
+                            file.close()
+
         else:
             print 'result  is empty '
             return
     else:
         print ('result status_code is %s'%r.status_code)
 
-
-
+'''
+根据url获取包结构
+'''
+def getReposCommentss(comments_url):
+    content_list=[]
+    #添加代理IP
+    secure_random = random.SystemRandom()
+    proxy = secure_random.choice(proxy_list)
+    # print("choose proxy: ", proxy)
+    session = requests.session()
+    session.proxies = {'http':proxy,
+                        'https':proxy
+                        }
+    r=session.get(comments_url)
+    # r = requests.get(comments_url)
+    if r.status_code == 200:
+        if  r.content:
+            res_content_list=json.loads(r.content)
+            for i in range(len(res_content_list)):
+                content_list.append(res_content_list[i]['body'])
+            return content_list
+        else:
+            print 'result  is empty '
+            return content_list
+    else:
+        print ('result status_code is %s'%r.status_code)
+        return content_list
 
 '''
 根据url获取包结构
 '''
 def getReposContents(contents_url):
     content_list=[]
-    r = requests.get(contents_url)
+    #添加代理IP
+    secure_random = random.SystemRandom()
+    proxy = secure_random.choice(proxy_list)
+    print("choose proxy: ", proxy)
+    session = requests.session()
+    session.proxies = {'http':proxy,
+                        'https':proxy
+                        }
+    r=session.get(contents_url)
+#     r = requests.get(contents_url)
     if r.status_code == 200:
         if  r.content:
             res_content_list=json.loads(r.content)
@@ -137,30 +228,13 @@ def getCondition_Contents_Url(contents_url):
                 return True
     return False
 
-"""
-http://www.ip181.com/获取HTTPS代理
-"""
-def get_ip181_proxies():
-    proxy_list = []
-    html_page = requests.get('http://www.ip181.com/').content.decode('utf-8','ignore')
-    items = BeautifulSoup(html_page, 'html.parser')
-    docs = items.find_all('td')
-    for i in range(len(docs)):
-        if docs[i].string:
-            l=re.findall(r'\d+.\d+.\d+.\d+', docs[i].string)
-            if l:
-                proxy_list.append(l[0]+":"+docs[i+1].string)
-    return proxy_list
+
 
 
 """
 获取HTTPS代理
 """
 proxy_list = []
-def func1():
-    global  proxy_list
-    proxy_list=get_ip181_proxies()
-
 
 
 count = 0
@@ -181,14 +255,3 @@ while (count < 9999999999):
 
     time.sleep(5)
     count+=1
-
-# func1()
-
-# while 1:
-#     try:
-#         res_dict = getUser('0')
-#         print len(res_dict)
-#     except Exception as exc:
-#         print(exc)
-#     finally:
-#         time.sleep(2)
