@@ -1,11 +1,3 @@
-'''
-github 被封信息
-{
-  "message": "API rate limit exceeded for 119.57.68.162. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)",
-  "documentation_url": "https://developer.github.com/v3/#rate-limiting"
-}
-
-'''
 #coding=utf-8
 import requests
 import json
@@ -13,22 +5,44 @@ import time
 import random
 import sys
 import re
+import string
+import traceback
 
 gol_lastId = '0'
-headers = {'Accept':'application/vnd.github.mercy-preview+json'}
+# 设置请求头部信息
+headers = {'User-Agent':'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
+'Accept':'application/vnd.github.mercy-preview+json',
+'Accept-Charset':'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
+'Accept-Encoding':'gzip',
+'Connection':'close',
+'Referer':'http://www.baidu.com/link?url=_andhfsjjjKRgEWkj7i9cFmYYGsisrnm2A-TN3XZDQXxvGsM9k9ZZSnikW2Yds4s&amp;amp;wd=&amp;amp;eqid=c3435a7d00146bd600000003582bfd1f'
+}
+
+def getChangeUrl(url):
+    try:
+        characters = string.ascii_letters  + string.digits
+        secret =  "".join(random.choice(characters) for x in range(random.randint(8, 16)))
+        headers['Referer'] = 'http://www.baidu.com/link?url=_andhfsjjjKRgEWkj7i9cFmYYGsisrnm2A-TN3XZDQXxvGsM9k9ZZSnikW2Yds4s&amp;amp;wd=&amp;amp;eqid=%s'%(secret)
+        print("header:", headers['Referer'])
+        #添加代理IP
+        secure_random = random.SystemRandom()
+        proxy = secure_random.choice(proxy_list)
+        print("choose proxy: ", proxy)
+        session = requests.session()
+        session.proxies = {'http':proxy,
+                            'https':proxy
+                            }
+#         r=session.get(url,headers=headers)
+        r=requests.get(url,headers=headers)
+    except Exception as e:
+        print traceback.format_exc()
+    return r
+
+
 def getUser(lastId):
     res_dict = {}
     url='https://api.github.com/users?since=%s'%(lastId)
-    #添加代理IP
-    secure_random = random.SystemRandom()
-    proxy = secure_random.choice(proxy_list)
-    print("choose proxy: ", proxy)
-    session = requests.session()
-    session.proxies = {'http':proxy,
-                        'https':proxy
-                        }
-    r=session.get(url)
-#     r = requests.get(url)
+    r=getChangeUrl(url)
     if r.status_code == 200:
         if  r.content:
             res_list=json.loads(r.content)
@@ -50,16 +64,7 @@ def getUser(lastId):
 def getResposByLogin(login):
     login_list=[]
     url='https://api.github.com/users/'+login+'/repos'
-    #添加代理IP
-    secure_random = random.SystemRandom()
-    proxy = secure_random.choice(proxy_list)
-    print("choose proxy: ", proxy)
-    session = requests.session()
-    session.proxies = {'http':proxy,
-                        'https':proxy
-                        }
-    r=session.get(url,headers=headers)
-#     r = requests.get(url,headers=headers)
+    r=getChangeUrl(url)
     if r.status_code == 200:
         if  r.content:
             res_login_list=json.loads(r.content)
@@ -87,17 +92,7 @@ issues列表查询
 def getIssues(login,name):
     print login,name
     url='https://api.github.com/repos/'+login+'/'+name+'/issues'
-    #添加代理IP
-    secure_random = random.SystemRandom()
-    proxy = secure_random.choice(proxy_list)
-    print("choose proxy: ", proxy)
-    session = requests.session()
-    session.proxies = {'http':proxy,
-                        'https':proxy
-                        }
-    r=session.get(url)
-    # r = requests.get(url)
-
+    r=getChangeUrl(url)
     if r.status_code == 200:
         if  r.content:
             res_issues_list=json.loads(r.content)
@@ -115,7 +110,7 @@ def getIssues(login,name):
                         res_dict['issues_body']=res_issues_list[j]['body']
                         res_dict['issues_comments_url']=res_issues_list[j]['comments_url']
                         jstxt=json.dumps(res_dict)
-                        # print jstxt
+                        print jstxt
                         txt_name=gol_lastId+'_'+login+'_'+name+'.txt'
                         # file=open('/Users/chenxiangyu/local/'+txt_name,'a')
                         file=open('/home/cxy/python/'+txt_name,'a')
@@ -133,7 +128,7 @@ def getIssues(login,name):
                             res_dict['issues_comments_url']=res_issues_list[j]['comments_url']
                             res_dict['issues_comments_body']=content_list[k]
                             jstxt=json.dumps(res_dict)
-                            # print jstxt
+                            print jstxt
                             txt_name=gol_lastId+'_'+login+'_'+name+'.txt'
                             # file=open('/Users/chenxiangyu/local/'+txt_name,'a')
                             file=open('/home/cxy/python/'+txt_name,'a')
@@ -151,16 +146,7 @@ def getIssues(login,name):
 '''
 def getReposCommentss(comments_url):
     content_list=[]
-    #添加代理IP
-    secure_random = random.SystemRandom()
-    proxy = secure_random.choice(proxy_list)
-    # print("choose proxy: ", proxy)
-    session = requests.session()
-    session.proxies = {'http':proxy,
-                        'https':proxy
-                        }
-    r=session.get(comments_url)
-    # r = requests.get(comments_url)
+    r=getChangeUrl(comments_url)
     if r.status_code == 200:
         if  r.content:
             res_content_list=json.loads(r.content)
@@ -179,16 +165,7 @@ def getReposCommentss(comments_url):
 '''
 def getReposContents(contents_url):
     content_list=[]
-    #添加代理IP
-    secure_random = random.SystemRandom()
-    proxy = secure_random.choice(proxy_list)
-    print("choose proxy: ", proxy)
-    session = requests.session()
-    session.proxies = {'http':proxy,
-                        'https':proxy
-                        }
-    r=session.get(contents_url)
-#     r = requests.get(contents_url)
+    r=getChangeUrl(contents_url)
     if r.status_code == 200:
         if  r.content:
             res_content_list=json.loads(r.content)
@@ -229,27 +206,32 @@ def getCondition_Contents_Url(contents_url):
     return False
 
 
+
+
 """
 获取HTTPS代理
 """
-proxy_list = []
-
+proxy_list = ['http://1:1@198.56.194.123:8080']
+# getIssues('chenpdsu','msms')
 
 count = 0
-while (count < 9999999999):
-    print count
-    res_dict = getUser(gol_lastId)
-    if not res_dict:
-        break
-    for k,v in res_dict.items():
-        login_list = getResposByLogin(v)
-        if login_list:
-            for i in login_list:
-                issues_list = getIssues(v,i)
-                print issues_list
-                time.sleep(5)
+try:
+    while (count < 9999999999):
+        print count
+        res_dict = getUser(gol_lastId)
+        if not res_dict:
+            break
+        for k,v in res_dict.items():
+            login_list = getResposByLogin(v)
+            if login_list:
+                for i in login_list:
+                    issues_list = getIssues(v,i)
+                    print issues_list
+                    time.sleep(15)
 
-        time.sleep(5)
+            time.sleep(15)
 
-    time.sleep(5)
-    count+=1
+        time.sleep(15)
+        count+=1
+except Exception as e:
+    print(traceback.format_exc())
